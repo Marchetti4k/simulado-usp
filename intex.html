@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USP Proficiência | Simulado Acadêmico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #141517;
+            --card: #1a1b1e;
+            --border: #2c2e33;
+            --text-muted: #909296;
+            --accent-blue: #a3c1e0;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: #e8e9eb; 
+            margin: 0; padding: 0;
+        }
+        .academic-font { font-family: 'Libre Baskerville', serif; }
+        .chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    margin: auto;
+    min-height: 280px;
+}
+        
+        /* Ajuste para evitar scroll na pre-page considerando header do sistema */
+      #intro-screen { 
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+        textarea { background: #25262b !important; color: #fff !important; border: 1px solid var(--border); resize: none; }
+        
+        .result-card { background: #1a1b1e; border: 1px solid #2c2e33; border-radius: 8px; padding: 16px; margin-bottom: 12px;transition: all 0.2s ease; }
+        .choice-box { background: #141517; border: 1px solid #2c2e33; padding: 12px; border-radius: 4px; }
+        
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Chosen Palette: Slate Dark Solid-->
+    
+    <!-- Application Structure Plan: 
+        1. Pre-page: Layout ultra-compacto. Título colado no corpo. 
+           Stats em grid de 3 colunas. Regulamento em 2 colunas.
+        2. Simulado: Header Slim (56px). Layout largo (max-w-6xl). 
+           Traduções inseridas imediatamente após os blocos de texto.
+        3. Resultados: Grid 2 colunas para comparação. 
+           Sua escolha vs Correta na mesma linha. Lógica em bloco separado abaixo.
+    -->
+
+    <!-- TELA INICIAL -->
+    <div id="intro-screen">
+        <div class="max-w-5xl w-full mx-auto px-6">
+            <header class="mb-4">
+                <p class="text-blue-400 font-bold text-xs tracking-widest uppercase mb-1">Biociências, Saúde e Meio Ambiente</p>
+                <h1 class="text-3xl font-bold academic-font text-white border-b border-zinc-800 pb-2">Exame de Proficiência Acadêmica</h1>
+            </header>
+
+            <div class="bg-[#1a1b1e] rounded-xl border border-[#2c2e33] overflow-hidden shadow-2xl">
+                <div class="p-10">
+                    <!-- Cards de Informação Unificados -->
+                    <div class="flex justify-center gap-4 mb-10">
+                        <div class="bg-[#141517] w-72 p-4 rounded-lg border border-[#2c2e33]">
+                            <span class="block text-[10px] font-bold text-zinc-500 uppercase">Tempo Disponível</span>
+                            <span class="text-xl font-bold text-[#a3c1e0]">01:30:00</span>
+                        </div>
+                        <div class="bg-[#141517] w-72 p-4 rounded-lg border border-[#2c2e33]">
+                            <span class="block text-[10px] font-bold text-zinc-500 uppercase">Total Questões</span>
+                            <span class="text-xl font-bold text-[#a3c1e0]"><span id="question-count" class="text-xl font-bold text-[#a3c1e0]"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="border-t border-[#2c2e33] pt-3">
+                            <h3 class="text-xs font-bold text-white uppercase tracking-widest mb-2">Regulamento do Exame</h3>
+                            <div class="grid md:grid-cols-2 gap-x-10 gap-y-5 text-[14px] leading-snug text-zinc-300">
+                                <p>• O cronômetro inicia em contagem regressiva e permite tempo extra.</p>
+                                <p>• É permitida a consulta apenas ao texto fornecido.</p>
+                                <p>• Questões avaliam compreensão, inferência e vocabulário técnico.</p>
+                                <p>• As traduções devem priorizar a norma culta acadêmica.</p>
+                                <p>• O encerramento gera um relatório de competências detalhado.</p>
+                                <p>• Certifique-se de preencher todos os campos antes de entregar.</p>
+                            </div>
+                        </div>
+                        <button onclick="startApp()" class="w-full py-3 bg-[#3b5bdb] text-white rounded font-bold text-sm hover:bg-[#4c6ef5] transition-colors mt-2">INICIAR SIMULADO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AMBIENTE DE PROVA -->
+    <div id="exam-env" style="display:none;">
+        <header class="fixed top-0 w-full h-14 bg-[#1a1b1e] border-b border-[#2c2e33] px-6 flex justify-between items-center z-50">
+            <div class="flex items-center gap-4">
+                <span class="font-bold text-xs tracking-widest text-[#a3c1e0]">USP PROFICIENCY</span>
+                <span id="timer-text" class="font-mono text-lg font-bold text-white bg-[#141517] px-3 py-1 rounded border border-[#2c2e33]">01:30:00</span>
+            </div>
+            <button onclick="finishExam()" class="px-4 py-1.5 bg-red-900/20 text-red-400 border border-red-900/50 rounded font-bold text-xs hover:bg-red-900 hover:text-white transition-all uppercase">Entregar Prova</button>
+        </header>
+
+        <main class="max-w-6xl mx-auto px-6 pt-24 pb-20">
+            <!-- TEXTO -->
+            <article class="bg-[#1a1b1e] p-8 rounded-lg border border-[#2c2e33] mb-8">
+                <h2 class="academic-font text-2xl font-bold text-white mb-6">Advanced Paradigms in T-cell Exhaustion and Tumor Immune Evasion</h2>
+                <div class="academic-font text-base text-zinc-300 space-y-4 leading-relaxed">
+                    <p>The landscape of modern oncology has been profoundly reshaped by our understanding of the <strong>T-cell exhaustion (TEX)</strong> program. Perceived as a passive failure of the immune system to maintain functions under chronic pressure, TEX is now unequivocally recognized as a distinct, actively regulated differentiation state. This program is characterized by the sustained expression of multiple inhibitory receptors, including PD-1, TIM-3, and LAG-3.</p>
+                    <p>At the center of this regulatory network is the transcription factor <strong>TOX</strong>. Without TOX, T-cells fail to enter the exhaustion program and, paradoxically, die due to overstimulation. Exhaustion is an evolutionary survival adaptation designed to preserve the T-cell lineage, albeit at the cost of reduced tumor-clearing efficiency.</p>
+                </div>
+            </article>
+
+            <!-- QUESTÕES -->
+            <div id="questions-mount" class="space-y-4 mb-8"></div>
+
+            <!-- TRADUÇÃO JUNTO AO CONTEXTO -->
+            <div class="bg-[#1a1b1e] p-8 rounded-lg border border-[#2c2e33] space-y-8">
+                <h3 class="text-sm font-bold text-[#a3c1e0] uppercase tracking-widest border-b border-[#2c2e33] pb-2">Produção de Tradução Técnica</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <div class="p-3 bg-[#141517] rounded border border-[#2c2e33] text-xs italic text-zinc-400">
+                            "Notwithstanding the initial proliferative surge of cytotoxic CD8+ T-cells, chronic antigen exposure induces a massive redistribution of chromatin accessibility."
+                        </div>
+                        <textarea id="trans-a" placeholder="Sua tradução para o Português..." class="w-full p-3 h-32 rounded text-sm outline-none focus:border-[#a3c1e0]"></textarea>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-[#141517] rounded border border-[#2c2e33] text-xs italic text-zinc-400">
+                            "Addressing the hurdles of combination therapies remains a paramount challenge. While synergy between ICIs holds promise, the risk of irAEs increases non-linearly."
+                        </div>
+                        <textarea id="trans-b" placeholder="Sua tradução para o Português..." class="w-full p-3 h-32 rounded text-sm outline-none focus:border-[#a3c1e0]"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="finishExam()" class="w-full py-4 bg-[#3b5bdb] text-white rounded-lg font-bold text-lg hover:bg-[#4c6ef5] mt-10 transition-shadow shadow-lg">FINALIZAR SIMULADO</button>
+        </main>
+    </div>
+
+    <!-- RESULTADOS (Baseada em correçop.png) -->
+    <div id="results-page" style="display:none;" class="min-h-screen p-8">
+        <div class="max-w-6xl mx-auto space-y-8">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-[#1a1b1e] p-8 rounded-xl border border-[#2c2e33] flex flex-col items-center justify-center">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Desempenho Final</span>
+                    <div id="res-score" class="text-6xl font-bold text-[#a3c1e0]">0/12</div>
+                    <div id="res-time" class="text-xs text-zinc-500 mt-2 italic font-mono"></div>
+                </div>
+                <div class="bg-[#1a1b1e] p-6 md:col-span-2 rounded-xl border border-[#2c2e33]">
+                    <h3 class="text-xs font-bold text-white uppercase mb-4">Competências Analisadas</h3>
+                    <div class="chart-container">
+                        <canvas id="skillsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="feedback-mount" class="space-y-4">
+                <!-- Injetado via JS idêntico ao correçop.png -->
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-3 bg-zinc-800 text-zinc-400 rounded-lg hover:text-white transition-all">RECOMEÇAR SIMULADO</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { id: 1, cat: "Inferência", q: "Como o entendimento de T-cell exhaustion (TEX) mudou no tempo?", opts: ["Sempre foi visto como um programa epigenético ativo.", "Historicamente visto como falha passiva, hoje é visto como programa regulado.", "Foi descoberto recentemente como uma falha reversível.", "É causado por células de memória citotóxicas."], ans: 1, logic: "O texto afirma explicitamente que o TEX evoluiu de 'passive failure' para 'actively regulated state'." },
+            { id: 2, cat: "Vocabulário", q: "No texto, a palavra 'refractory' tem o sentido de:", opts: ["Facilmente modificado por drogas.", "Resistente ou difícil de alterar.", "Temporário ou passageiro.", "Rápido crescimento."], ans: 1, logic: "Refractory indica algo que não responde a estímulos, no contexto, a assinatura epigenética é resistente a tratamentos." },
+            { id: 3, cat: "Contexto", q: "Qual a função dos receptores inibitórios (ex: PD-1) segundo o autor?", opts: ["Acelerar a destruição do tumor.", "Atuar como freios para prevenir dano ao próprio organismo.", "Abrir a cromatina para genes efetores.", "Ajudar células malignas a consumirem glicose."], ans: 1, logic: "O texto define como 'molecular brakes to prevent lethal immunopathology'." },
+            { id: 4, cat: "Gramática", q: "O que o pronome 'those' refere-se em '...at key effector gene loci, such as those encoding Interferon-gamma'?", opts: ["Therapies", "Inhibitory receptors", "Loci (locais)", "Epigenetic signatures"], ans: 2, logic: "O pronome 'those' retoma o substantivo plural 'loci'." },
+            { id: 5, cat: "Inferência", q: "O que ocorre se o fator de transcrição TOX estiver ausente?", opts: ["As células lutam melhor contra o câncer.", "As células morrem por superestimulação.", "As células revertem ao estado de memória.", "As células ganham energia através de glicose."], ans: 1, logic: "O texto diz que sem TOX as células 'die due to overstimulation'." },
+            { id: 6, cat: "Vocabulário", q: "A palavra 'notwithstanding' na tradução introduz:", opts: ["Uma causa direta.", "Uma consequência.", "Uma concessão ou contraste.", "Uma conclusão final."], ans: 2, logic: "Notwithstanding é sinônimo de 'Despite', indicando contraste (Apesar de)." },
+            { id: 7, cat: "Contexto", q: "Como as células tumorais no TME afetam as células T?", opts: ["Elas compartilham nutrientes essenciais.", "Elas consomem glicose, ganhando na competição metabólica.", "Elas inibem o TOX para salvar a célula T.", "Elas removem a assinatura epigenética."], ans: 1, logic: "Malignant cells outcompete T-cells for glucose." },
+            { id: 8, cat: "Gramática", q: "O termo 'albeit' significa:", opts: ["Portanto", "Além disso", "Embora / Ainda que", "Porque"], ans: 2, logic: "Albeit é uma conjunção concessiva clássica do inglês acadêmico." },
+            { id: 9, cat: "Inferência", q: "Qual o desafio principal das terapias combinadas?", opts: ["Falta de pacientes.", "Aumento não linear da toxicidade (irAEs).", "ICIs não podem ser combinados.", "Dificuldade de identificar a linhagem celular."], ans: 1, logic: "O texto cita que o risco de efeitos adversos (irAEs) cresce de forma não linear." },
+            { id: 10, cat: "Vocabulário", q: "O termo 'harnessing' implica:", opts: ["Ignorar os dados.", "Utilizar ou aproveitar um potencial.", "Destruir a hierarquia.", "Limitar a área de pesquisa."], ans: 1, logic: "Harnessing significa canalizar ou tirar proveito de algo." },
+            { id: 11, cat: "Contexto", q: "Por que o bloqueio de PD-1 pode ser insuficiente?", opts: ["PD-1 não é o principal receptor.", "A cromatina permanece em configuração fechada.", "Aumenta muito o risco de irAEs.", "Células tumorais produzem pouca glicose."], ans: 1, logic: "O texto menciona que se a cromatina estiver fechada, o bloqueio do receptor não adianta." },
+            { id: 12, cat: "Inferência", q: "O programa de exaustão é considerado pelo autor como:", opts: ["Um erro evolutivo.", "Uma adaptação de sobrevivência evolutiva.", "Uma consequência da cirurgia.", "Uma ativação temporária de memória."], ans: 1, logic: "A exaustão é descrita como 'evolutionary survival adaptation'." }
+        ];
+
+        document.getElementById('question-count').innerText =
+            `${questions.length} Questões`;
+
+        let time = 5400;
+        let userChoices = {};
+        let interval;
+        let finished = false;
+        
+        function startApp() {
+    document.getElementById('intro-screen').style.display = 'none';
+    document.getElementById('exam-env').style.display = 'block';
+    renderQuestions();
+    startTimer();
+    window.scrollTo(0,0);
+}
+
+        function renderQuestions() {
+            const mount = document.getElementById('questions-mount');
+            mount.innerHTML = questions.map((q, i) => `
+                <div class="bg-[#1a1b1e] p-6 rounded-lg border border-[#2c2e33]">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-[9px] font-bold text-zinc-500 uppercase border border-[#2c2e33] px-2 py-0.5 rounded">${q.cat}</span>
+                    </div>
+                    <p class="font-bold text-sm text-white mb-4 leading-tight">${i+1}. ${q.q}</p>
+                    <div class="grid md:grid-cols-2 gap-2">
+                        ${q.opts.map((opt, idx) => `
+                            <label class="flex items-center p-4 border border-[#2c2e33] rounded-lg cursor-pointer transition-all text-sm group bg-[#141517] hover:border-[#3b5bdb] hover:bg-[#1d1f24]">
+                                <input type="radio" name="q-${q.id}" value="${idx}" class="peer hidden" onchange="userChoices[${q.id}] = ${idx}">
+                                <div class="w-3 h-3 m-3 rounded-full border-2 border-zinc-600 flex items-center justify-center transition-all peer-checked:border-[#4c6ef5] peer-checked:bg-[#4c6ef5]">
+    <div class="w-2 h-2 rounded-full bg-white opacity-10 peer-checked:opacity-90"></div>
+</div>
+                                <span class="flex-1 flex-1 text-zinc-400 transition-all peer-checked:text-white"><span class="font-bold text-zinc-600 mr-1">${['A','B','C','D'][idx]}.</span> ${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startTimer() {
+    updateTimerUI();
+
+    interval = setInterval(() => {
+        time--;
+        updateTimerUI();
+    }, 1000);
+}
+
+        function updateTimerUI() {
+            const el = document.getElementById('timer-text');
+            const absTime = Math.abs(time);
+            const h = Math.floor(absTime / 3600);
+            const m = Math.floor((absTime % 3600) / 60);
+            const s = absTime % 60;
+            const str = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            el.innerText = time < 0 ? `-${str}` : str;
+            if(time < 0) el.classList.add('text-red-400');
+        }
+
+        function finishExam() {
+
+    if (finished) return;
+    finished = true;
+    clearInterval(interval);
+    document.getElementById('intro-screen').style.display = 'none';
+    document.getElementById('exam-env').style.display = 'none';
+    document.getElementById('results-page').style.display = 'block';
+    setTimeout(() => {
+    processResults();
+                    }, 100);
+    window.scrollTo(0,0);
+}
+
+        function processResults() {
+            let score = 0;
+            const stats = { "Inferência": 0, "Vocabulário": 0, "Contexto": 0, "Gramática": 0 };
+            const totals = { "Inferência": 0, "Vocabulário": 0, "Contexto": 0, "Gramática": 0 };
+            const mount = document.getElementById('feedback-mount');
+            mount.innerHTML = "";
+
+            questions.forEach(q => {
+                const uIdx = userChoices[q.id];
+                const isCorrect = uIdx === q.ans;
+                totals[q.cat]++;
+                if(isCorrect) { score++; stats[q.cat]++; }
+
+                const card = document.createElement('div');
+                card.className = `result-card border-l-4 ${
+    isCorrect
+        ? 'border-l-emerald-500 bg-emerald-950/10'
+        : 'border-l-red-500 bg-red-950/10'
+}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="font-bold text-sm text-white">${q.id}. ${q.q}</h4>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded ${isCorrect ? 'bg-emerald-900/40 text-emerald-400' : 'bg-red-900/40 text-red-400 uppercase'}">${isCorrect ? 'ACERTO' : 'ERRO'}</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-3 mb-3">
+                        <div class="choice-box">
+                            <span class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">SUA ESCOLHA:</span>
+                            <p class="text-xs ${isCorrect ? 'text-emerald-500' : 'text-red-400'}">
+                                <strong>Alternativa ${uIdx !== undefined ? ['A','B','C','D'][uIdx] : '-'}:</strong> ${uIdx !== undefined ? q.opts[uIdx] : 'Não respondida'}
+                            </p>
+                        </div>
+                        <div class="choice-box">
+                            <span class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">OPÇÃO CORRETA:</span>
+                            <p class="text-xs text-white">
+                                <strong>Alternativa ${['A','B','C','D'][q.ans]}:</strong> ${q.opts[q.ans]}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-[#141517] p-3 rounded italic text-[11px] text-zinc-500">
+                        Lógica: ${q.logic}
+                    </div>
+                `;
+                mount.appendChild(card);
+            });
+
+            document.getElementById('res-score').innerText = `${score}/${questions.length}`;
+            document.getElementById('res-time').innerText = `Tempo: ${document.getElementById('timer-text').innerText}`;
+            renderChart(stats, totals);
+        }
+        let chartInstance;
+        function renderChart(stats, totals) {
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    const ctx = document.getElementById('skillsChart').getContext('2d');
+
+    chartInstance = new Chart(ctx, {
+
+        type: 'radar',
+
+        data: {
+
+            labels: ['Inferência', 'Vocabulário', 'Contexto', 'Gramática'],
+
+            datasets: [{
+
+                label: 'Aproveitamento %',
+
+                data: Object.keys(stats).map(k =>
+                    totals[k] ? (stats[k] / totals[k]) * 100 : 0
+                ),
+
+                backgroundColor: 'rgba(163, 193, 224, 0.2)',
+
+                borderColor: '#a3c1e0',
+
+                borderWidth: 2,
+
+                pointRadius: 3
+
+            }]
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            scales: {
+
+                r: {
+
+                    grid: { color: '#2c2e33' },
+
+                    angleLines: { color: '#2c2e33' },
+
+                    pointLabels: {
+                        color: '#909296',
+                        font: { size: 10 }
+                    },
+
+                    ticks: { display: false },
+
+                    beginAtZero: true,
+
+                    max: 100
+                }
+            },
+
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+    </script>
+</body>
+</html>
